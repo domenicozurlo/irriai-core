@@ -902,6 +902,20 @@ export const oauthConsent = sqliteTable(
 	(t) => [index('oauth_consent_clientId_idx').on(t.clientId), index('oauth_consent_userId_idx').on(t.userId)],
 );
 
+export const brandingConfig = sqliteTable('branding_config', {
+	id: text('id').primaryKey(),
+	appName: text('app_name'),
+	tabTitle: text('tab_title'),
+	logoData: text('logo_data'),
+	logoMediaType: text('logo_media_type'),
+	faviconData: text('favicon_data'),
+	faviconMediaType: text('favicon_media_type'),
+	updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+		.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+		.$onUpdate(() => /* @__PURE__ */ new Date())
+		.notNull(),
+});
+
 export const jwks = sqliteTable('jwks', {
 	id: text('id')
 		.$defaultFn(() => crypto.randomUUID())

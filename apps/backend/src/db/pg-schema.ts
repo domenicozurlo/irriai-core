@@ -848,6 +848,20 @@ export const oauthConsent = pgTable(
 	(t) => [index('oauth_consent_clientId_idx').on(t.clientId), index('oauth_consent_userId_idx').on(t.userId)],
 );
 
+export const brandingConfig = pgTable('branding_config', {
+	id: text('id').primaryKey(),
+	appName: text('app_name'),
+	tabTitle: text('tab_title'),
+	logoData: text('logo_data'),
+	logoMediaType: text('logo_media_type'),
+	faviconData: text('favicon_data'),
+	faviconMediaType: text('favicon_media_type'),
+	updatedAt: timestamp('updated_at')
+		.defaultNow()
+		.$onUpdate(() => /* @__PURE__ */ new Date())
+		.notNull(),
+});
+
 export const jwks = pgTable('jwks', {
 	id: text('id')
 		.$defaultFn(() => crypto.randomUUID())
