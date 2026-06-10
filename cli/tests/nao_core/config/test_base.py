@@ -2,6 +2,9 @@ import os
 import warnings
 from unittest.mock import patch
 
+import pytest
+from pydantic import ValidationError
+
 from nao_core.config.base import NaoConfig
 from nao_core.config.databases.duckdb import DuckDBConfig
 from nao_core.config.llm import LLMConfig, LLMProvider
@@ -54,6 +57,20 @@ def test_mixed_dollar_and_no_dollar_syntax():
         content = "a: ${{ env('VAR1') }}, b: {{ env('VAR2') }}"
         result, _ = process_secrets(content)
         assert result == "a: value1, b: value2"
+
+
+def test_threads_can_be_loaded_from_config(tmp_path):
+    config_file = tmp_path / "nao_config.yaml"
+    config_file.write_text("project_name: test-project\nthreads: 4\n")
+
+    config = NaoConfig.load(tmp_path)
+
+    assert config.threads == 4
+
+
+def test_threads_must_be_positive():
+    with pytest.raises(ValidationError):
+        NaoConfig.model_validate({"project_name": "test-project", "threads": 0})
 
 
 @patch("nao_core.config.base.ask_confirm")
