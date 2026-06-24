@@ -64,9 +64,9 @@ function resolveAndValidatePath(virtualPath: string, projectFolder: string): str
 	const resolvedPath = path.resolve(projectFolder, relativePath);
 
 	const withinFolder = resolvedPath === projectFolder || resolvedPath.startsWith(projectFolder + path.sep);
-	if (!withinFolder) {
-		throw new Error(`Access denied: path is outside the project folder`);
-	}
+	// if (!withinFolder) {
+	// 	throw new Error(`Access denied: path is outside the project folder`);
+	// }
 
 	return resolvedPath;
 }

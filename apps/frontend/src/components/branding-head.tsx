@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { brandingAssetUrl, useBranding } from '@/hooks/use-branding';
 
-const DEFAULT_TITLE = 'nao — Chat with your data';
+const DEFAULT_TITLE = 'AI Know';
 const DEFAULT_FAVICON = '/favicon.ico';
 
 /**

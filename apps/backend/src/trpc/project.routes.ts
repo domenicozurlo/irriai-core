@@ -5,7 +5,7 @@ import { z } from 'zod/v4';
 
 import { getProviderAuth, KNOWN_MODELS } from '../agents/providers';
 import { getDatabaseObjects } from '../agents/user-rules';
-import { env } from '../env';
+import { env, isSelfHosted } from '../env';
 import * as chatQueries from '../queries/chat.queries';
 import * as projectQueries from '../queries/project.queries';
 import * as llmConfigQueries from '../queries/project-llm-config.queries';
@@ -33,6 +33,31 @@ const isoDateString = z.string().refine(isValidIsoDateString, {
 
 export const projectRoutes = {
 	listForCurrentUser: protectedProcedure.query(async ({ ctx }) => {
+		if (isSelfHosted) {
+			const project = await projectQueries.getProjectByUserId(ctx.user.id, ctx.selectedProjectId);
+			if (!project) {
+				return [];
+			}
+
+			const userRole = await projectQueries.getUserRoleInProject(project.id, ctx.user.id);
+			if (!userRole) {
+				return [];
+			}
+
+			return [
+				{
+					id: project.id,
+					orgId: project.orgId,
+					name: project.name,
+					type: project.type,
+					path: project.path,
+					createdAt: project.createdAt,
+					updatedAt: project.updatedAt,
+					userRole,
+				},
+			];
+		}
+
 		const projects = await projectQueries.listUserProjectsWithRoles(ctx.user.id);
 		return projects.map(({ project, userRole }) => ({
 			id: project.id,

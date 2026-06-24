@@ -117,6 +117,9 @@ export type NewMcpChartEmbed = typeof sqliteSchema.mcpChartEmbed.$inferInsert;
 export type DBMessageImage = typeof sqliteSchema.messageImage.$inferSelect;
 export type NewMessageImage = typeof sqliteSchema.messageImage.$inferInsert;
 
+export type DBContextAsset = typeof sqliteSchema.contextAsset.$inferSelect;
+export type NewContextAsset = typeof sqliteSchema.contextAsset.$inferInsert;
+
 export type DBApiKey = typeof sqliteSchema.apiKey.$inferSelect;
 export type NewApiKey = typeof sqliteSchema.apiKey.$inferInsert;
 

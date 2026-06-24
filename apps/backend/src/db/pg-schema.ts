@@ -918,6 +918,27 @@ export const messageImage = pgTable('message_image', {
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const contextAsset = pgTable(
+	'context_asset',
+	{
+		id: text('id')
+			.$defaultFn(() => crypto.randomUUID())
+			.primaryKey(),
+		projectId: text('project_id')
+			.notNull()
+			.references(() => project.id, { onDelete: 'cascade' }),
+		virtualPath: text('virtual_path').notNull(),
+		contentHash: text('content_hash').notNull(),
+		data: text('data').notNull(),
+		mediaType: text('media_type').notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(t) => [
+		index('context_asset_projectId_idx').on(t.projectId),
+		uniqueIndex('context_asset_project_path_hash_unique').on(t.projectId, t.virtualPath, t.contentHash),
+	],
+);
+
 export const message_part_chart_image = pgTable('chart_image', {
 	id: text('id')
 		.$defaultFn(() => crypto.randomUUID())

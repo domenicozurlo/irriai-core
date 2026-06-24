@@ -26,6 +26,7 @@ import { authRoutes } from './routes/auth';
 import { authErrorRedirectRoutes } from './routes/auth-error-redirect';
 import { brandingRoutes } from './routes/branding';
 import { chartRoutes } from './routes/chart';
+import { contextAssetRoutes } from './routes/context-assets';
 import { deployRoutes } from './routes/deploy';
 import { embedStoryDownloadRoutes } from './routes/embed-story-download';
 import { githubRoutes } from './routes/github';
@@ -160,6 +161,10 @@ app.register(imageRoutes, {
 	prefix: '/i',
 });
 
+app.register(contextAssetRoutes, {
+	prefix: '/context-assets',
+});
+
 app.register(brandingRoutes, {
 	prefix: '/branding',
 });
@@ -273,6 +278,8 @@ const isReservedBackendPath = (url: string) => {
 		pathname.startsWith('/c/') ||
 		pathname === '/i' ||
 		pathname.startsWith('/i/') ||
+		pathname === '/context-assets' ||
+		pathname.startsWith('/context-assets/') ||
 		pathname === '/branding' ||
 		pathname.startsWith('/branding/') ||
 		pathname === '/mcp' ||

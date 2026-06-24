@@ -988,6 +988,29 @@ export const messageImage = sqliteTable('message_image', {
 		.notNull(),
 });
 
+export const contextAsset = sqliteTable(
+	'context_asset',
+	{
+		id: text('id')
+			.$defaultFn(() => crypto.randomUUID())
+			.primaryKey(),
+		projectId: text('project_id')
+			.notNull()
+			.references(() => project.id, { onDelete: 'cascade' }),
+		virtualPath: text('virtual_path').notNull(),
+		contentHash: text('content_hash').notNull(),
+		data: text('data').notNull(),
+		mediaType: text('media_type').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+	},
+	(t) => [
+		index('context_asset_projectId_idx').on(t.projectId),
+		uniqueIndex('context_asset_project_path_hash_unique').on(t.projectId, t.virtualPath, t.contentHash),
+	],
+);
+
 export const message_part_chart_image = sqliteTable('chart_image', {
 	id: text('id')
 		.$defaultFn(() => crypto.randomUUID())

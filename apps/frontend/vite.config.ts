@@ -4,8 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { devtools } from '@tanstack/devtools-vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import viteReact from '@vitejs/plugin-react';
-import svgr from 'vite-plugin-svgr';
 import { defineConfig } from 'vite';
+import svgr from 'vite-plugin-svgr';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -46,6 +46,9 @@ export default defineConfig({
 				target: 'http://localhost:5005',
 			},
 			'/c/': {
+				target: 'http://localhost:5005',
+			},
+			'/context-assets/': {
 				target: 'http://localhost:5005',
 			},
 			'/branding/': {
