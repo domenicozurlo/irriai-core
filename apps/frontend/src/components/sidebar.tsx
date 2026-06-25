@@ -12,7 +12,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { ChatFilterMenu } from './sidebar-chat-filter-menu';
 import { ChatListItem } from './sidebar-chat-list-item';
-import { SidebarCommunity } from './sidebar-community';
+// import { SidebarCommunity } from './sidebar-community';
 import { SidebarSettingsNav } from './sidebar-settings-nav';
 import { SidebarUserMenu } from './sidebar-user-menu';
 import { SidebarVersionNotice } from './sidebar-version-notice';
@@ -282,7 +282,8 @@ export function Sidebar() {
 			{!isInSettings && <div className='border-b border-sidebar-border mx-2'></div>}
 
 			<div className={cn('mt-auto transition-[padding] duration-300', effectiveIsCollapsed ? 'p-1' : 'p-2')}>
-				{isInSettings && <SidebarCommunity isCollapsed={effectiveIsCollapsed} />}
+				{/* Community links intentionally hidden. */}
+				{/* {isInSettings && <SidebarCommunity isCollapsed={effectiveIsCollapsed} />} */}
 				{isAdmin && <SidebarVersionNotice isCollapsed={effectiveIsCollapsed} />}
 				<SidebarUserMenu isCollapsed={effectiveIsCollapsed} isInSettings={!!isInSettings} />
 			</div>

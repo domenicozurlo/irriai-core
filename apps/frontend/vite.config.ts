@@ -51,6 +51,9 @@ export default defineConfig({
 			'/context-assets/': {
 				target: 'http://localhost:5005',
 			},
+			'/context-files/': {
+				target: 'http://localhost:5005',
+			},
 			'/branding/': {
 				target: 'http://localhost:5005',
 			},

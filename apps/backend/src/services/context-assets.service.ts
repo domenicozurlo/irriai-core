@@ -8,6 +8,8 @@ const MAX_CONTEXT_ASSET_BYTES = 5 * 1024 * 1024;
 const CONTEXT_ASSET_URL_PREFIX = '/context-assets';
 
 const INLINE_MARKDOWN_IMAGE_REGEX = /!\[([^\]\n]*(?:\][^\]\n]*)*)\]\(([^)\n]+)\)/g;
+const LOCAL_IMAGE_REFERENCE_REGEX =
+	/(^|[\s"'(<])((?:\.{0,2}\/|\/)?(?:[\w .-]+[\\/])*[\w .-]+\.(?:gif|jpe?g|png|svg|webp)(?:[?#][^\s"'<>)]*)?)/gim;
 
 const IMAGE_MEDIA_TYPES: Record<string, string> = {
 	'.gif': 'image/gif',
@@ -24,7 +26,16 @@ export async function resolveMarkdownImageAssets(options: {
 	projectFolder: string;
 	sourceFilePath: string;
 }): Promise<string> {
-	return rewriteMarkdownImageLinks(options.content, async (rawDestination) => {
+	return resolveTextImageAssets(options);
+}
+
+export async function resolveTextImageAssets(options: {
+	content: string;
+	projectId: string;
+	projectFolder: string;
+	sourceFilePath: string;
+}): Promise<string> {
+	const resolveUrl = async (rawDestination: string) => {
 		const asset = await resolveLocalImageAsset({
 			rawDestination,
 			projectId: options.projectId,
@@ -32,7 +43,10 @@ export async function resolveMarkdownImageAssets(options: {
 			sourceFilePath: options.sourceFilePath,
 		});
 		return asset ? `${CONTEXT_ASSET_URL_PREFIX}/${asset.id}` : null;
-	});
+	};
+
+	const contentWithMarkdownImages = await rewriteMarkdownImageLinks(options.content, resolveUrl);
+	return rewriteLocalImageReferences(contentWithMarkdownImages, resolveUrl);
 }
 
 export async function rewriteMarkdownImageLinks(
@@ -65,6 +79,31 @@ export async function rewriteMarkdownImageLinks(
 		}
 
 		result += `![${altText}](${replacementUrl}${parsed.titleSuffix})`;
+	}
+
+	return result + content.slice(cursor);
+}
+
+export async function rewriteLocalImageReferences(
+	content: string,
+	resolveUrl: (rawDestination: string) => Promise<string | null>,
+): Promise<string> {
+	let result = '';
+	let cursor = 0;
+
+	for (const match of content.matchAll(LOCAL_IMAGE_REFERENCE_REGEX)) {
+		const index = match.index;
+		if (index === undefined) {
+			continue;
+		}
+
+		const [fullMatch, prefix, rawDestination] = match;
+		const destinationStart = index + prefix.length;
+		result += content.slice(cursor, destinationStart);
+		cursor = index + fullMatch.length;
+
+		const replacementUrl = await resolveUrl(rawDestination).catch(() => null);
+		result += replacementUrl ?? rawDestination;
 	}
 
 	return result + content.slice(cursor);

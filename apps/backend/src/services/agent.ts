@@ -842,7 +842,7 @@ class AgentManager {
 	}
 }
 
-const IMAGE_URL_PATTERN = /^\/i\/([a-f0-9-]+)$/;
+const IMAGE_URL_PATTERN = /^\/i\/([0-9a-fA-F-]{8,})$/;
 
 type MessageLike = Omit<UIMessage, 'id'>;
 

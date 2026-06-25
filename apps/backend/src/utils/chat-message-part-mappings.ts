@@ -161,7 +161,7 @@ const convertDBToolPartToUIPart = (part: DBMessagePart & { type: UIToolPart['typ
 	return toolPart as UIToolPart;
 };
 
-const IMAGE_URL_PATTERN = /^\/i\/([a-f0-9-]+)$/;
+const IMAGE_URL_PATTERN = /^\/i\/([0-9a-fA-F-]{8,})$/;
 
 function extractImageIdFromUrl(url: string): string | null {
 	const match = url.match(IMAGE_URL_PATTERN);

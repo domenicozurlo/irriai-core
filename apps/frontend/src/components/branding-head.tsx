@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { brandingAssetUrl, useBranding } from '@/hooks/use-branding';
 
-const DEFAULT_TITLE = 'AI Know';
+const DEFAULT_TITLE = 'IRRI AI';
 const DEFAULT_FAVICON = '/favicon.ico';
 
 /**
