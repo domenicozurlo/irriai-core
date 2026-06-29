@@ -25,6 +25,7 @@ export const createTool = <TInput, TOutput>(
  * Directory names that should be excluded from tool operations (list, search, read).
  */
 export const EXCLUDED_DIRS = ['.meta'];
+const KEY_VALUE_DIR_NAMES = new Set(['type', 'database', 'schema', 'table']);
 
 type NaoignoreCacheEntry = {
 	/** `mtimeMs:size` of the .naoignore file, or `null` if the file does not exist */
@@ -219,7 +220,10 @@ export const toRealPath = (virtualPath: string, projectFolder: string): string =
 	const relativePath = virtualPath.startsWith('/') ? virtualPath.slice(1) : virtualPath;
 
 	// Resolve and normalize (this handles .. and .)
-	const resolvedPath = path.resolve(normalizedFolder, relativePath);
+	let resolvedPath = path.resolve(normalizedFolder, relativePath);
+	if (!fs.existsSync(resolvedPath)) {
+		resolvedPath = resolveKeyValuePathAlias(normalizedFolder, relativePath) ?? resolvedPath;
+	}
 
 	// Check if path is outside project folder
 	const withinFolder = resolvedPath === normalizedFolder || resolvedPath.startsWith(normalizedFolder + path.sep);
@@ -239,6 +243,37 @@ export const toRealPath = (virtualPath: string, projectFolder: string): string =
 
 	return resolvedPath;
 };
+
+function resolveKeyValuePathAlias(projectFolder: string, relativePath: string): string | null {
+	const parts = relativePath.split(/[\\/]+/).filter(Boolean);
+	let resolvedPath = projectFolder;
+	let usedAlias = false;
+
+	for (let index = 0; index < parts.length; index++) {
+		const segment = parts[index];
+		const directPath = path.resolve(resolvedPath, segment);
+
+		if (fs.existsSync(directPath)) {
+			resolvedPath = directPath;
+			continue;
+		}
+
+		const nextSegment = parts[index + 1];
+		if (nextSegment && KEY_VALUE_DIR_NAMES.has(segment)) {
+			const aliasPath = path.resolve(resolvedPath, `${segment}=${nextSegment}`);
+			if (fs.existsSync(aliasPath)) {
+				resolvedPath = aliasPath;
+				usedAlias = true;
+				index++;
+				continue;
+			}
+		}
+
+		resolvedPath = directPath;
+	}
+
+	return usedAlias ? resolvedPath : null;
+}
 
 /**
  * Converts a real filesystem path to a virtual path (where / = project folder).

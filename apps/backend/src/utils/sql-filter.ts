@@ -1,6 +1,7 @@
 const WRITE_STATEMENT_RE =
 	/^\s*(INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE|REPLACE|MERGE|GRANT|REVOKE|RENAME|CALL|EXEC|EXECUTE|LOCK|UNLOCK)\b/i;
 const SELECT_RE = /^\s*SELECT\b/i;
+const READ_ONLY_METADATA_RE = /^\s*(DESCRIBE|DESC|SHOW|EXPLAIN|PRAGMA)\b/i;
 const WITH_RE = /^\s*WITH\b/i;
 
 export async function isReadOnlySqlQuery(sql: string): Promise<boolean> {
@@ -21,6 +22,9 @@ function isStatementReadOnly(statement: string): boolean {
 		return false;
 	}
 	if (SELECT_RE.test(trimmed)) {
+		return true;
+	}
+	if (READ_ONLY_METADATA_RE.test(trimmed)) {
 		return true;
 	}
 	if (WITH_RE.test(trimmed)) {

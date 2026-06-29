@@ -27,6 +27,31 @@ async function loadTools(variant: 'posix' | 'win32') {
 	return tools;
 }
 
+async function loadToolsWithExistingPaths(variant: 'posix' | 'win32', existingPaths: string[]) {
+	vi.resetModules();
+
+	const pathModule = await import('path');
+	const impl = pathModule[variant];
+	const existing = new Set(existingPaths.map((filePath) => impl.resolve(filePath)));
+	vi.doMock('path', () => ({ ...impl, default: impl }));
+	const existsSync = (filePath: string) => existing.has(impl.resolve(filePath));
+	const statSync = () => {
+		const err = new Error('ENOENT') as NodeJS.ErrnoException;
+		err.code = 'ENOENT';
+		throw err;
+	};
+	vi.doMock('fs', () => ({
+		default: { existsSync, readFileSync: () => '', statSync },
+		existsSync,
+		readFileSync: () => '',
+		statSync,
+	}));
+
+	const tools = await import('../src/utils/tools');
+	tools.clearNaoignoreCache();
+	return tools;
+}
+
 afterEach(() => {
 	vi.restoreAllMocks();
 	vi.resetModules();
@@ -122,6 +147,27 @@ describe('toRealPath', () => {
 		it('handles mixed separators in project folder', async () => {
 			const { toRealPath } = await loadTools('win32');
 			expect(toRealPath('/agent', 'C:/Users\\user/project')).toBe('C:\\Users\\user\\project\\agent');
+		});
+
+		it('resolves database key/value directory aliases', async () => {
+			const root = 'C:\\Users\\user\\project';
+			const tablePath =
+				'C:\\Users\\user\\project\\databases\\type=mysql\\database=irriai_db\\schema=irriai_db\\table=proghistory';
+			const { toRealPath } = await loadToolsWithExistingPaths('win32', [
+				'C:\\Users\\user\\project\\databases',
+				'C:\\Users\\user\\project\\databases\\type=mysql',
+				'C:\\Users\\user\\project\\databases\\type=mysql\\database=irriai_db',
+				'C:\\Users\\user\\project\\databases\\type=mysql\\database=irriai_db\\schema=irriai_db',
+				tablePath,
+				`${tablePath}\\how_to_use.md`,
+			]);
+
+			expect(
+				toRealPath(
+					'/databases/type=mysql/database=irriai_db/schema=irriai_db/table/proghistory/how_to_use.md',
+					root,
+				),
+			).toBe(`${tablePath}\\how_to_use.md`);
 		});
 	});
 });

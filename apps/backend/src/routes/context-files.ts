@@ -14,6 +14,17 @@ const pdfQuerySchema = z.object({
 	path: z.string().min(1),
 });
 
+const imageQuerySchema = pdfQuerySchema;
+const MAX_CONTEXT_IMAGE_BYTES = 5 * 1024 * 1024;
+const IMAGE_MEDIA_TYPES: Record<string, string> = {
+	'.gif': 'image/gif',
+	'.jpeg': 'image/jpeg',
+	'.jpg': 'image/jpeg',
+	'.png': 'image/png',
+	'.svg': 'image/svg+xml',
+	'.webp': 'image/webp',
+};
+
 export const contextFileRoutes = async (app: App) => {
 	app.addHook('preHandler', authMiddleware);
 
@@ -50,4 +61,54 @@ export const contextFileRoutes = async (app: App) => {
 			.header('Cache-Control', 'private, max-age=300')
 			.send(buffer);
 	});
+
+	app.get('/image', { schema: { querystring: imageQuerySchema } }, async (request, reply) => {
+		const { chatId, path: rawVirtualPath } = request.query;
+		const virtualPath = normalizeVirtualAssetPath(rawVirtualPath);
+		const chat = await chatQueries.getChatInfo(chatId);
+		if (!chat) {
+			throw new HandlerError('NOT_FOUND', 'Chat not found');
+		}
+
+		const userRole = await projectQueries.getUserRoleInProject(chat.projectId, request.user.id);
+		if (!userRole) {
+			throw new HandlerError('FORBIDDEN', 'You do not have access to this project');
+		}
+
+		const project = await projectQueries.retrieveProjectById(chat.projectId);
+		if (!project.path) {
+			throw new HandlerError('BAD_REQUEST', 'Project path not configured');
+		}
+
+		const mediaType = IMAGE_MEDIA_TYPES[path.extname(virtualPath).toLowerCase()];
+		if (!mediaType) {
+			throw new HandlerError('BAD_REQUEST', 'Only image files can be viewed');
+		}
+
+		const realPath = toRealPath(virtualPath, project.path);
+		const stat = await fs.stat(realPath);
+		if (!stat.isFile()) {
+			throw new HandlerError('NOT_FOUND', 'Image file not found');
+		}
+		if (stat.size > MAX_CONTEXT_IMAGE_BYTES) {
+			throw new HandlerError('BAD_REQUEST', 'Image file is too large');
+		}
+
+		const buffer = await fs.readFile(realPath);
+		return reply
+			.header('Content-Type', mediaType)
+			.header('Content-Disposition', `inline; filename="${path.basename(realPath).replaceAll('"', '')}"`)
+			.header('Cache-Control', 'private, max-age=300')
+			.send(buffer);
+	});
 };
+
+function normalizeVirtualAssetPath(virtualPath: string): string {
+	const withoutFragment = virtualPath.split('#', 1)[0];
+	const withoutQuery = withoutFragment.split('?', 1)[0];
+	try {
+		return decodeURI(withoutQuery).replaceAll('\\', '/');
+	} catch {
+		return withoutQuery.replaceAll('\\', '/');
+	}
+}

@@ -25,6 +25,12 @@ describe('isReadOnlySqlQuery', () => {
 		expect(await isReadOnlySqlQuery('WITH cte AS (SELECT id FROM users) SELECT * FROM cte')).toBe(true);
 	});
 
+	it('allows read-only metadata statements', async () => {
+		expect(await isReadOnlySqlQuery('DESCRIBE proghistory')).toBe(true);
+		expect(await isReadOnlySqlQuery('SHOW COLUMNS FROM proghistory')).toBe(true);
+		expect(await isReadOnlySqlQuery('EXPLAIN SELECT * FROM proghistory')).toBe(true);
+	});
+
 	it('blocks INSERT', async () => {
 		expect(await isReadOnlySqlQuery("INSERT INTO users (name) VALUES ('alice')")).toBe(false);
 	});
