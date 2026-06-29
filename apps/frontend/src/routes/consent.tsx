@@ -3,10 +3,10 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/brand-logo';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { Spinner } from '@/components/ui/spinner';
-import NaoLogo from '@/components/icons/nao-full-logo.svg';
 import { authClient } from '@/lib/auth-client';
 
 interface PublicClient {
@@ -156,7 +156,7 @@ function CenteredCard({ children }: { children: React.ReactNode }) {
 	return (
 		<div className='mx-auto w-full max-w-md p-8 my-auto'>
 			<div className='flex flex-col items-center gap-8 mb-10 pb-2'>
-				<NaoLogo className='w-20 h-auto text-foreground' />
+				<BrandLogo className='h-10 w-auto max-w-[180px]' />
 				<h1 className='font-borna text-2xl font-medium text-center'>Authorize</h1>
 			</div>
 			{children}

@@ -105,6 +105,10 @@ function HomePage() {
 	]);
 	const storyGroups = useMemo(() => buildStoryGroups(latestStoryItems), [latestStoryItems]);
 	const hasMoreStories = (stories.data?.length ?? 0) > storyCols;
+	const isDark =
+		theme.theme === 'dark' ||
+		(theme.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+	const backgroundLogoSrc = isDark ? '/darkLogo.svg' : '/lightLogo.svg';
 
 	const handleProjectChange = useCallback(
 		async (projectId: string) => {
@@ -116,11 +120,6 @@ function HomePage() {
 		},
 		[project.data, queryClient],
 	);
-
-	const isDark =
-		theme.theme === 'dark' ||
-		(theme.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-	const logoSrc = isDark ? '/darkLogo.svg' : '/lightLogo.svg';
 
 	return (
 		<div className='relative flex flex-col h-full flex-1 min-w-72 overflow-hidden justify-center'>
@@ -176,10 +175,10 @@ function HomePage() {
 								</div>
 								<div className='relative flex w-full max-w-3xl mx-auto flex-col gap-4'>
 									<img
-										src={logoSrc}
+										src={backgroundLogoSrc}
 										alt=''
 										aria-hidden
-										className='pointer-events-none absolute -top-60 left-1/2 -translate-x-1/2 w-full max-w-2xl select-none -z-10'
+										className='pointer-events-none absolute -top-48 left-1/2 -translate-x-1/2 h-40 w-auto max-w-[70vw] select-none opacity-10 -z-10'
 									/>
 									<ChatInput />
 									<SavedPromptSuggestions />

@@ -179,7 +179,10 @@ export const useAgent = ({ disableNavigation = false }: { disableNavigation?: bo
 		return agentService.registerAgent(agentId, newAgent);
 	}, [chatId, disableNavigation, navigate, setChat, queryClient]);
 
-	const { status, error, clearError, sendMessage, setMessages, messages } = useChat({ chat: agentInstance });
+	const { status, error, clearError, sendMessage, setMessages, messages } = useChat({
+		chat: agentInstance,
+		experimental_throttle: 50,
+	});
 
 	const stopAgentMutation = useMutation(trpc.chat.stop.mutationOptions());
 	const isRunning = checkIsAgentRunning({ status });

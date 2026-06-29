@@ -2,10 +2,7 @@
 
 import { useEffect } from 'react';
 
-import { brandingAssetUrl, useBranding } from '@/hooks/use-branding';
-
-const DEFAULT_TITLE = 'IRRI AI';
-const DEFAULT_FAVICON = '/favicon.ico';
+import { useBrandAssets } from '@/hooks/use-branding';
 
 /**
  * Sync the browser tab (title + favicon) with the active white-label branding.
@@ -13,19 +10,17 @@ const DEFAULT_FAVICON = '/favicon.ico';
  * an admin toggling the license off does not strand the page with stale chrome.
  */
 export function BrandingHead() {
-	const branding = useBranding();
+	const { appName, branding, faviconUrl } = useBrandAssets();
 
 	useEffect(() => {
-		const title = branding.enabled && branding.tabTitle ? branding.tabTitle : DEFAULT_TITLE;
+		const title = branding.enabled && branding.tabTitle ? branding.tabTitle : appName;
 		document.title = title;
-	}, [branding.enabled, branding.tabTitle]);
+	}, [appName, branding.enabled, branding.tabTitle]);
 
 	useEffect(() => {
-		const href =
-			branding.enabled && branding.hasFavicon ? brandingAssetUrl('favicon', branding.updatedAt) : DEFAULT_FAVICON;
-		setFaviconHref(href);
-		return () => setFaviconHref(DEFAULT_FAVICON);
-	}, [branding.enabled, branding.hasFavicon, branding.updatedAt]);
+		setFaviconHref(faviconUrl);
+		return () => setFaviconHref(faviconUrl);
+	}, [faviconUrl]);
 
 	return null;
 }

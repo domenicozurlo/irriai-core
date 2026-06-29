@@ -9,8 +9,7 @@ import { OidcSignInButton } from '@/components/auth-oidc-button';
 import { Button, ChatButton, AuthSocialButton } from '@/components/ui/button';
 import GithubIcon from '@/components/icons/github-icon.svg';
 import GoogleIcon from '@/components/icons/google-icon.svg';
-import NaoLogo from '@/components/icons/nao-full-logo.svg';
-import { brandingAssetUrl, useBranding } from '@/hooks/use-branding';
+import { BrandLogo } from '@/components/brand-logo';
 import { handleGithubSignIn, handleGoogleSignIn } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 
@@ -43,7 +42,6 @@ export function AuthForm({
 	const isGithubSetup = useQuery(trpc.authConfig.github.isSetup.queryOptions());
 	const isMicrosoftSetup = useIsMicrosoftSetup();
 	const oidcConfig = useQuery(trpc.authConfig.oidc.getConfig.queryOptions());
-	const branding = useBranding();
 
 	const socialProviders: Array<(className?: string) => React.ReactNode> = [
 		isGoogleSetup.data &&
@@ -89,15 +87,7 @@ export function AuthForm({
 			<div className='flex w-full items-center justify-center lg:w-1/2'>
 				<div className='mx-auto w-full max-w-md p-8 my-auto gap-4'>
 					<div className='flex flex-col items-center start mb-10 pb-2 gap-8'>
-						{branding.enabled && branding.hasLogo ? (
-							<img
-								src={brandingAssetUrl('logo', branding.updatedAt)}
-								alt={branding.appName ?? 'Logo'}
-								className='h-10 w-auto max-w-[180px] object-contain'
-							/>
-						) : (
-							<NaoLogo className='w-20 h-auto text-foreground' />
-						)}
+						<BrandLogo className='h-10 w-auto max-w-[180px]' />
 						<h1 className='font-borna text-2xl font-medium text-center'>{title}</h1>
 					</div>
 
