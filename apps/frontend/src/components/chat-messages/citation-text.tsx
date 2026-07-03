@@ -25,6 +25,9 @@ const LOCAL_IMAGE_REFERENCE_REGEX =
 	/(^|[\s"'(<])((?:\.{0,2}\/|\/)?(?:[\w .-]+[\\/])*[\w .-]+\.(?:gif|jpe?g|png|svg|webp)(?:[?#][^\s"'<>)]*)?)/gim;
 const SOURCES_HEADING_REGEX = /(^|\n)#{2,3}\s*(Fonti|Sources)\s*\n/i;
 const PDF_REFERENCE_REGEX = /`?([^`\s,]+?\.pdf#page=\d+)`?/gi;
+const IMAGE_FILE_EXTENSION_REGEX = /\.(?:gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i;
+const OMITTED_IMAGE_VALUE_REGEX =
+	/^(?:-|n\/?a|none|null|no|not needed|not necessary|not required|non necessaria|non necessario|non richiesta|non richiesto|non disponibile|nessuna|nessuno)$/i;
 
 function stripClobberPrefix(value: string): string {
 	return value.startsWith(CLOBBER_PREFIX) ? value.slice(CLOBBER_PREFIX.length) : value;
@@ -266,7 +269,7 @@ function SourcesSection({
 	}
 
 	return (
-		<section className='mt-5 rounded-lg border bg-muted/20 p-3 sm:p-4'>
+		<section className='mt-5 max-w-full overflow-hidden rounded-lg border bg-muted/20 p-3 sm:p-4'>
 			<div className='mb-3 flex items-center gap-2'>
 				<div className='flex size-7 items-center justify-center rounded-md bg-background text-muted-foreground'>
 					<Rows3 className='size-4' />
@@ -278,7 +281,7 @@ function SourcesSection({
 					</p>
 				</div>
 			</div>
-			<div className='grid gap-2'>
+			<div className='grid min-w-0 gap-2'>
 				{groups.map((group, index) => (
 					<SourceCard
 						key={`${group.wikiPages.join('|')}:${group.pdfRefs.map(formatPdfReference).join('|')}:${index}`}
@@ -317,8 +320,8 @@ function SourceCard({
 	);
 
 	return (
-		<div className='rounded-md border bg-background p-3'>
-			<div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+		<div className='min-w-0 overflow-hidden rounded-md border bg-background p-3'>
+			<div className='flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
 				<div className='min-w-0 space-y-1'>
 					<div className='flex min-w-0 items-center gap-2'>
 						<Newspaper className='size-4 shrink-0 text-muted-foreground' />
@@ -336,7 +339,7 @@ function SourceCard({
 					)}
 				</div>
 				{group.pdfRefs.length > 0 && (
-					<div className='flex flex-wrap gap-1.5 sm:justify-end'>
+					<div className='flex min-w-0 max-w-full flex-wrap gap-1.5 sm:justify-end'>
 						{group.pdfRefs.map((pdf) => (
 							<Button
 								key={formatPdfReference(pdf)}
@@ -355,7 +358,7 @@ function SourceCard({
 				)}
 			</div>
 			{(group.pages.length > 0 || group.images.length > 0 || group.details.length > 0) && (
-				<div className='mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground'>
+				<div className='mt-3 flex min-w-0 max-w-full flex-wrap gap-2 text-xs text-muted-foreground'>
 					{group.pages.map((pages) => (
 						<SourcePill
 							key={`pages:${pages}`}
@@ -392,10 +395,10 @@ function SourceCard({
 function SourcePill({ icon, label, title }: { icon: ReactNode; label: string; title?: string }) {
 	return (
 		<span
-			className='inline-flex max-w-full items-center gap-1 rounded bg-muted px-2 py-1 font-mono'
+			className='inline-flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded bg-muted px-2 py-1 font-mono'
 			title={title ?? label}
 		>
-			{icon}
+			<span className='shrink-0'>{icon}</span>
 			<span className='truncate'>{label}</span>
 		</span>
 	);
@@ -439,7 +442,7 @@ function parseSourceGroups(sourceText: string): SourceGroup[] {
 				break;
 			case 'image':
 			case 'image path':
-				current.images.push(field.value);
+				addSourceImages(current, field.value);
 				break;
 			default:
 				current.details.push({ label: titleCase(field.label), value: field.value });
@@ -495,6 +498,29 @@ function addPdfRefs(group: SourceGroup, value: string) {
 			group.pdfRefs.push(pdf);
 		}
 	}
+}
+
+function addSourceImages(group: SourceGroup, value: string) {
+	for (const image of splitSourceValues(value)) {
+		if (!isRenderableSourceImage(image)) {
+			continue;
+		}
+		if (!group.images.includes(image)) {
+			group.images.push(image);
+		}
+	}
+}
+
+function splitSourceValues(value: string): string[] {
+	return value
+		.split(',')
+		.map((part) => stripMarkdownInline(part))
+		.filter(Boolean);
+}
+
+function isRenderableSourceImage(value: string): boolean {
+	const stripped = stripMarkdownInline(value);
+	return !!stripped && !OMITTED_IMAGE_VALUE_REGEX.test(stripped) && IMAGE_FILE_EXTENSION_REGEX.test(stripped);
 }
 
 function stripMarkdownInline(value: string): string {
