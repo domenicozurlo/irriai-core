@@ -43,7 +43,7 @@ if [ "$NAO_CONTEXT_SOURCE" = "git" ]; then
             chmod 700 "$SSH_DIR"
             
             SSH_KEY_FILE="$SSH_DIR/id_deploy"
-            printf '%s\n' "$NAO_CONTEXT_GIT_SSH_KEY" > "$SSH_KEY_FILE"
+            printf '%b' "$NAO_CONTEXT_GIT_SSH_KEY" | sed 's/\r$//' > "$SSH_KEY_FILE"
             chmod 600 "$SSH_KEY_FILE"
             
             # Pre-pin host keys for GitHub (https://api.github.com/meta) and Bitbucket (https://bitbucket.org/site/ssh)

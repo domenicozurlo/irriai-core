@@ -71,7 +71,7 @@ RUN if [ -n "$NAO_CLI_VERSION" ]; then \
     fi
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --system '.[all]'
+    uv pip install --system '.[mysql]'
 
 # =============================================================================
 # STAGE 5: Runtime image
@@ -82,7 +82,7 @@ ARG APP_VERSION=dev
 ARG APP_COMMIT=unknown
 ARG APP_BUILD_DATE=
 
-# Install only runtime system packages — Node.js and Bun are copied from the
+# Install only runtime system packages - Node.js and Bun are copied from the
 # base stage below, avoiding the slow nodesource.com setup + npm install.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -91,6 +91,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fontconfig \
     fonts-dejavu-core \
     git \
+    libmariadb3 \
     libpq5 \
     openssh-client \
     supervisor \
@@ -120,7 +121,7 @@ COPY --from=python-builder --chown=nao:nao /usr/local/bin/nao /usr/local/bin/nao
 COPY --from=deps --chown=nao:nao /app/package.json ./
 COPY --from=deps --chown=nao:nao /app/node_modules ./node_modules
 
-# Copy backend and shared source (no build needed — Bun runs TS directly)
+# Copy backend and shared source (no build needed - Bun runs TS directly)
 COPY --chown=nao:nao apps/backend ./apps/backend
 COPY --chown=nao:nao apps/shared ./apps/shared
 
@@ -133,15 +134,15 @@ RUN --mount=type=bind,source=docker/lock-license-key.mjs,target=/tmp/lock-licens
 # Copy frontend build output
 COPY --from=frontend-builder --chown=nao:nao /app/apps/frontend/dist ./apps/frontend/dist
 
-# Copy example project (fallback for local mode)
-COPY --chown=nao:nao example /app/example
-
 # Copy supervisor configuration
 COPY docker/supervisord.conf /etc/supervisor/conf.d/nao.conf
 
 # Copy entrypoint script
+# COPY docker/entrypoint.sh /entrypoint.sh
+# RUN chmod +x /entrypoint.sh
+
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 # Environment variables
 ENV MODE=prod
@@ -151,7 +152,7 @@ ENV FASTAPI_PORT=8005
 ENV APP_VERSION=$APP_VERSION
 ENV APP_COMMIT=$APP_COMMIT
 ENV APP_BUILD_DATE=$APP_BUILD_DATE
-ENV NAO_DEFAULT_PROJECT_PATH=/app/example
+ENV NAO_DEFAULT_PROJECT_PATH=/app/context
 ENV NAO_CONTEXT_SOURCE=local
 ENV DOCKER=1
 

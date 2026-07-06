@@ -313,7 +313,7 @@ function SourceCard({
 		() =>
 			chatId
 				? group.images
-						.map((image) => toContextFileImageUrl(image, chatId))
+						.map((image) => toRenderableSourceImageUrl(image, chatId))
 						.filter((url): url is string => !!url)
 				: [],
 		[group.images, chatId],
@@ -520,7 +520,11 @@ function splitSourceValues(value: string): string[] {
 
 function isRenderableSourceImage(value: string): boolean {
 	const stripped = stripMarkdownInline(value);
-	return !!stripped && !OMITTED_IMAGE_VALUE_REGEX.test(stripped) && IMAGE_FILE_EXTENSION_REGEX.test(stripped);
+	return (
+		!!stripped &&
+		!OMITTED_IMAGE_VALUE_REGEX.test(stripped) &&
+		(stripped.startsWith('/context-assets/') || IMAGE_FILE_EXTENSION_REGEX.test(stripped))
+	);
 }
 
 function stripMarkdownInline(value: string): string {
@@ -596,6 +600,19 @@ function toContextFileImageUrl(rawPath: string, chatId: string): string | null {
 	}
 
 	return `/context-files/image?chatId=${encodeURIComponent(chatId)}&path=${encodeURIComponent(trimmed)}`;
+}
+
+function toRenderableSourceImageUrl(rawPath: string, chatId: string): string | null {
+	const trimmed = rawPath.trim();
+	if (!trimmed) {
+		return null;
+	}
+
+	if (trimmed.startsWith('/context-assets/')) {
+		return trimmed;
+	}
+
+	return toContextFileImageUrl(trimmed, chatId);
 }
 
 function ContextAssetImages({
